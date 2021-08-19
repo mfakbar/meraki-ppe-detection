@@ -7,7 +7,7 @@ WEBEX_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vNTVlODM2MjAtMDBjZC0xMWVjLWE5NGEtOTE
 webexAPI = WebexTeamsAPI(access_token=WEBEX_TOKEN)
 
 # mock data
-mv_loc = "Warehouse"
+mv_loc = "Warehouse / MV12"
 snapshot_url = "https://safetyskills.com/wp-content/uploads/2020/11/Head-Face-and-Eye-Protection.jpeg"
 people_count = "1"
 detected_name = "Bob"
@@ -67,7 +67,7 @@ CARD_CONTENT = {
                     "items": [
                         {
                             "type": "TextBlock",
-                            "text": "Location:",
+                            "text": "Location / Cam ID:",
                             "color": "Light"
                         },
                         {
