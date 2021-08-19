@@ -10,7 +10,8 @@ webexAPI = WebexTeamsAPI(access_token=WEBEX_TOKEN)
 mv_loc = "Warehouse"
 snapshot_url = "https://safetyskills.com/wp-content/uploads/2020/11/Head-Face-and-Eye-Protection.jpeg"
 people_count = "1"
-missing_ppe = "Eyewear, Gloves, Hat"
+detected_name = "Bob"
+missing_ppe = "Gloves, Mask"
 event_time = "19-Aug-2021 (10:10)"
 
 # webex card payload
@@ -71,7 +72,14 @@ CARD_CONTENT = {
                         },
                         {
                             "type": "TextBlock",
-                            "text": "Name:",
+                            "text": "People count:",
+                            "weight": "Lighter",
+                            "color": "Light",
+                            "spacing": "Small"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Detected names:",
                             "weight": "Lighter",
                             "color": "Light",
                             "spacing": "Small"
@@ -110,6 +118,13 @@ CARD_CONTENT = {
                         },
                         {
                             "type": "TextBlock",
+                            "text": "Bob",  # parameter
+                            "color": "Light",
+                            "weight": "Lighter",
+                            "spacing": "Small"
+                        },
+                        {
+                            "type": "TextBlock",
                             "text": "Facemask, Gloves",  # parameter
                             "weight": "Lighter",
                             "color": "Light",
@@ -139,9 +154,9 @@ CARD_CONTENT = {
 
 
 # post webex card as notification
-def postCard_ppeViolation(mv_loc, snapshot_url, people_count, missing_ppe, event_time, room_id):
+def postCard_ppeViolation(mv_loc, snapshot_url, people_count, detected_name, missing_ppe, event_time, room_id):
 
-    iconUrl = "https://findicons.com/files/icons/1671/simplicio/128/notification_warning.png"
+    iconUrl = "https://raw.githubusercontent.com/mfakbar/meraki-ppe-detection/main/IMAGES/warning_notification.png"
 
     # payload parameter
     CARD_CONTENT["body"][0]["columns"][0]["items"][0]["url"] = iconUrl
@@ -150,8 +165,9 @@ def postCard_ppeViolation(mv_loc, snapshot_url, people_count, missing_ppe, event
     CARD_CONTENT["body"][1]["columns"][1]["items"][0][
         "text"] = '[' + mv_loc + '](' + snapshot_url + ')'
     CARD_CONTENT["body"][1]["columns"][1]["items"][1]["text"] = people_count
-    CARD_CONTENT["body"][1]["columns"][1]["items"][2]["text"] = missing_ppe
-    CARD_CONTENT["body"][1]["columns"][1]["items"][3]["text"] = event_time
+    CARD_CONTENT["body"][1]["columns"][1]["items"][2]["text"] = detected_name
+    CARD_CONTENT["body"][1]["columns"][1]["items"][3]["text"] = missing_ppe
+    CARD_CONTENT["body"][1]["columns"][1]["items"][4]["text"] = event_time
     CARD_CONTENT["body"][2]["url"] = snapshot_url
 
     webexAPI.messages.create(
@@ -162,7 +178,8 @@ def postCard_ppeViolation(mv_loc, snapshot_url, people_count, missing_ppe, event
             "content": CARD_CONTENT
         }]
     )
+    print("Card posted!")
 
 
 postCard_ppeViolation(mv_loc, snapshot_url, people_count,
-                      missing_ppe, event_time, WEBEX_ROOM_ID)
+                      detected_name, missing_ppe, event_time, WEBEX_ROOM_ID)
