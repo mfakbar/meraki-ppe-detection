@@ -6,13 +6,13 @@ WEBEX_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vNTVlODM2MjAtMDBjZC0xMWVjLWE5NGEtOTE
 # webex API instance
 webexAPI = WebexTeamsAPI(access_token=WEBEX_TOKEN)
 
-# mock data
-mv_loc = "Warehouse / MV12"
-snapshot_url = "https://safetyskills.com/wp-content/uploads/2020/11/Head-Face-and-Eye-Protection.jpeg"
-people_count = "1"
-detected_name = "Bob"
-missing_ppe = "Gloves, Mask"
-event_time = "19-Aug-2021 (10:10)"
+# # mock data
+# mv_loc = "Warehouse / MV12"
+# snapshot_url = "https://safetyskills.com/wp-content/uploads/2020/11/Head-Face-and-Eye-Protection.jpeg"
+# person_count = "1"
+# detected_name = "Bob"
+# missing_ppe = "Gloves, Mask"
+# event_time = "19-Aug-2021 (10:10)"
 
 # webex card payload
 CARD_CONTENT = {
@@ -154,7 +154,7 @@ CARD_CONTENT = {
 
 
 # post webex card as notification
-def postCard_ppeViolation(mv_loc, snapshot_url, people_count, detected_name, missing_ppe, event_time, room_id):
+def postCard_ppeViolation(mv_loc, snapshot_url, person_count, detected_name, missing_ppe, event_time):
 
     iconUrl = "https://raw.githubusercontent.com/mfakbar/meraki-ppe-detection/main/IMAGES/warning_notification.png"
 
@@ -164,14 +164,14 @@ def postCard_ppeViolation(mv_loc, snapshot_url, people_count, detected_name, mis
     CARD_CONTENT["body"][0]["columns"][1]["items"][1]["color"] = "Attention"
     CARD_CONTENT["body"][1]["columns"][1]["items"][0][
         "text"] = '[' + mv_loc + '](' + snapshot_url + ')'
-    CARD_CONTENT["body"][1]["columns"][1]["items"][1]["text"] = people_count
+    CARD_CONTENT["body"][1]["columns"][1]["items"][1]["text"] = person_count
     CARD_CONTENT["body"][1]["columns"][1]["items"][2]["text"] = detected_name
     CARD_CONTENT["body"][1]["columns"][1]["items"][3]["text"] = missing_ppe
     CARD_CONTENT["body"][1]["columns"][1]["items"][4]["text"] = event_time
     CARD_CONTENT["body"][2]["url"] = snapshot_url
 
     webexAPI.messages.create(
-        roomId=room_id,
+        roomId=WEBEX_ROOM_ID,
         text="If you see this your client cannot render Webex adaptive cards",
         attachments=[{
             "contentType": "application/vnd.microsoft.card.adaptive",
@@ -181,5 +181,5 @@ def postCard_ppeViolation(mv_loc, snapshot_url, people_count, detected_name, mis
     print("Card posted!")
 
 
-postCard_ppeViolation(mv_loc, snapshot_url, people_count,
-                      detected_name, missing_ppe, event_time, WEBEX_ROOM_ID)
+# postCard_ppeViolation(mv_loc, snapshot_url, person_count,
+#                       detected_name, missing_ppe, event_time, WEBEX_ROOM_ID)
