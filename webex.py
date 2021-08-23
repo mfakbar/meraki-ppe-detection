@@ -1,7 +1,10 @@
+import os
+from dotenv import load_dotenv
 from webexteamssdk import WebexTeamsAPI
 
-WEBEX_TOKEN = "YzYxZjg2N2UtNTZmNi00YzhkLTgzOWUtZmRjZGQ1YWUxN2M3NmIwOGZiODAtZGZh_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
-WEBEX_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vNTVlODM2MjAtMDBjZC0xMWVjLWE5NGEtOTE0MWYxY2FlM2M5"
+load_dotenv()
+WEBEX_TOKEN = os.getenv('WEBEX_TOKEN')
+WEBEX_ROOM_ID = os.getenv('WEBEX_ROOM_ID')
 
 # webex API instance
 webexAPI = WebexTeamsAPI(access_token=WEBEX_TOKEN)
@@ -179,7 +182,3 @@ def postCard_ppeViolation(mv_loc, snapshot_url, person_count, detected_name, mis
         }]
     )
     print("Card posted!")
-
-
-# postCard_ppeViolation(mv_loc, snapshot_url, person_count,
-#                       detected_name, missing_ppe, event_time, WEBEX_ROOM_ID)

@@ -1,13 +1,17 @@
 import boto3
 import json
 import time
-from webex import *
 from urllib.request import urlopen
 import requests
+import os
+from dotenv import load_dotenv
+from webex import *
+
 
 # AWS
-ACCESS_KEY = 'AKIA5ANNF62AWAH7HREH'
-SECRET_KEY = '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'
+load_dotenv()
+ACCESS_KEY = os.getenv('AWS_ACCESS_KEY')
+SECRET_KEY = os.getenv('AWS_SECRET_KEY')
 
 
 # snapshot_url = event['image_url']
