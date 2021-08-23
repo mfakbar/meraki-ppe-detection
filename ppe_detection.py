@@ -12,7 +12,7 @@ SECRET_KEY = 'fctUonpHWdZeePCRgBdEIj0pjP8PxaPA3ZthjxP6'
 
 # snapshot_url = event['image_url']
 snapshot_url = "https://thumbs.dreamstime.com/b/seaman-ab-bosun-deck-vessel-ship-wearing-ppe-personal-protective-equipment-helmet-coverall-lifejacket-goggles-safety-141609777.jpg"
-
+# snapshot_url = "https://raw.githubusercontent.com/mfakbar/meraki-ppe-detection/main/IMAGES/seaman_test.jpg"
 ppe_requirement = ['FACE_COVER', 'HAND_COVER', 'HEAD_COVER']
 
 
@@ -35,12 +35,8 @@ response = rekog.detect_protective_equipment(
     }
 )
 
-# json_object = json.dumps(response, indent=4)
-# print(json_object)
-
 # Image analysis
 person_count = str(len(response["Persons"]))
-# print(person_count)
 missing_ppe_msg = ""
 person_num = 1
 
@@ -59,7 +55,7 @@ if response["Summary"]["PersonsWithoutRequiredEquipment"] != []:
     # print(ppe_requirement)
 
     for person in response["Persons"]:
-        missing_ppe_msg += "[Person #" + str(person_num) + ":"
+        missing_ppe_msg += "[Person #" + str(person_num) + ": "
 
         # for bodypart in person["BodyParts"]:
         #     for req in ppe_requirement:
@@ -96,15 +92,73 @@ if response["Summary"]["PersonsWithoutRequiredEquipment"] != []:
                 else:
                     missing_ppe_msg += "(Head)"
 
-        missing_ppe_msg += "]"
+        missing_ppe_msg += "] "
         person_num += 1
 
 print(missing_ppe_msg)
 
+
+def upload_to_s3(snapshot_url):
+    temp_image = requests.get(snapshot_url, stream=True)
+
+    session = boto3.Session()
+    s3 = session.resource('s3')
+
+    bucket_name = 'faceforppedetection'
+    saved_img = 'snapshot.jpg'
+
+    bucket = s3.Bucket(bucket_name)
+    bucket.upload_fileobj(temp_image.raw, saved_img)
+
+    print("Image uploaded to S3")
+
+    return saved_img
+
+
+def search_face(img):
+    bucket = 'faceforppedetection'
+    collectionId = 'face_collection_for_PPE_detection'
+    fileName = img
+    threshold = 70
+    maxFaces = 2
+
+    client = boto3.client('rekognition')
+
+    response = client.search_faces_by_image(CollectionId=collectionId,
+                                            Image={'S3Object': {
+                                                'Bucket': bucket, 'Name': fileName}},
+                                            FaceMatchThreshold=threshold,
+                                            MaxFaces=maxFaces)
+
+    faceMatches = response['FaceMatches']
+    print('Matching faces')
+    for match in faceMatches:
+        print('FaceId:' + match['Face']['FaceId'])
+        print('Employee alias:' + match['Face']['ExternalImageId'])
+        print('Similarity: ' + "{:.2f}".format(match['Similarity']) + "%")
+
+    return faceMatches
+
+
+saved_img = upload_to_s3(snapshot_url)
+face_matches = search_face(saved_img)
+detected_face_msg = ""
+person_num = 1
+
+for match in face_matches:
+    detected_face_msg += "[Person #" + str(person_num) + ": "
+
+    detected_face_msg += match['Face']['ExternalImageId'][:-4] + \
+        " ({:.2f}".format(match['Similarity']) + "%)"
+
+    detected_face_msg += "] "
+    person_num += 1
+
+print(detected_face_msg)
+
 # mock data
 mv_loc = "Warehouse / MV12"
-detected_name = "Bob"
-event_time = "19-Aug-2021 (10:10)"
+event_time = "19-Aug-2021 / 10:10"
 
 # postCard_ppeViolation(mv_loc, snapshot_url, person_count,
-#                       detected_name, missing_ppe_msg, event_time)
+#                       detected_face_msg, missing_ppe_msg, event_time)
