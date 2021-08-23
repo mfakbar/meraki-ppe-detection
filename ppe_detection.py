@@ -7,16 +7,12 @@ import os
 from dotenv import load_dotenv
 from webex import *
 
-
-# AWS
+# load AWS credentials
 load_dotenv()
 ACCESS_KEY = os.getenv('AWS_ACCESS_KEY')
 SECRET_KEY = os.getenv('AWS_SECRET_KEY')
 
-
-# snapshot_url = event['image_url']
-snapshot_url = "https://thumbs.dreamstime.com/b/seaman-ab-bosun-deck-vessel-ship-wearing-ppe-personal-protective-equipment-helmet-coverall-lifejacket-goggles-safety-141609777.jpg"
-# snapshot_url = "https://raw.githubusercontent.com/mfakbar/meraki-ppe-detection/main/IMAGES/seaman_test.jpg"
+# PPE policy
 ppe_requirement = ['FACE_COVER', 'HAND_COVER', 'HEAD_COVER']
 
 
@@ -25,9 +21,11 @@ def image_encoder(url):
     return contents
 
 
-# Perform connection to AWS Rekognition service
+# Connect to AWS Rekognition
 rekog = boto3.client('rekognition', region_name='ap-southeast-1',
                      aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
+
+snapshot_url = "https://thumbs.dreamstime.com/b/seaman-ab-bosun-deck-vessel-ship-wearing-ppe-personal-protective-equipment-helmet-coverall-lifejacket-goggles-safety-141609777.jpg"
 
 response = rekog.detect_protective_equipment(
     Image={
@@ -47,28 +45,8 @@ person_num = 1
 # Only proceed if there's a PPE violation
 if response["Summary"]["PersonsWithoutRequiredEquipment"] != []:
 
-    # replace ppe requirement value
-    # for i in range(len(ppe_requirement)):
-    #     if ppe_requirement[i] == "FACE_COVER":
-    #         ppe_requirement[i] = "FACE"
-    #     if ppe_requirement[i] == "HEAD_COVER":
-    #         ppe_requirement[i] = "HEAD"
-    #     if ppe_requirement[i] == "HAND_COVER":
-    #         ppe_requirement[i] = "RIGHT HAND"
-    #         ppe_requirement.append("LEFT HAND")
-    # print(ppe_requirement)
-
     for person in response["Persons"]:
         missing_ppe_msg += "[Person #" + str(person_num) + ": "
-
-        # for bodypart in person["BodyParts"]:
-        #     for req in ppe_requirement:
-        #         if bodypart["Name"] == req:
-        #             if len(bodypart["EquipmentDetections"]) > 0:
-        #                 if bodypart["EquipmentDetections"][0]["CoversBodyPart"]["Value"] == False:
-        #                     missing_ppe_msg += "(" + req + "-Uncovered)"
-        #             else:
-        #                 missing_ppe_msg += "(" + req + ")"
 
         for bodypart in person["BodyParts"]:
             if bodypart["Name"] == "FACE":
@@ -144,6 +122,7 @@ def search_face(img):
     return faceMatches
 
 
+# Face detection
 saved_img = upload_to_s3(snapshot_url)
 face_matches = search_face(saved_img)
 detected_face_msg = ""
@@ -160,7 +139,7 @@ for match in face_matches:
 
 print(detected_face_msg)
 
-# mock data
+# mock data from MV
 mv_loc = "Warehouse / MV12"
 event_time = "19-Aug-2021 / 10:10"
 

@@ -2,20 +2,13 @@ import os
 from dotenv import load_dotenv
 from webexteamssdk import WebexTeamsAPI
 
+# load Webex credentials
 load_dotenv()
 WEBEX_TOKEN = os.getenv('WEBEX_TOKEN')
 WEBEX_ROOM_ID = os.getenv('WEBEX_ROOM_ID')
 
 # webex API instance
 webexAPI = WebexTeamsAPI(access_token=WEBEX_TOKEN)
-
-# # mock data
-# mv_loc = "Warehouse / MV12"
-# snapshot_url = "https://safetyskills.com/wp-content/uploads/2020/11/Head-Face-and-Eye-Protection.jpeg"
-# person_count = "1"
-# detected_name = "Bob"
-# missing_ppe = "Gloves, Mask"
-# event_time = "19-Aug-2021 (10:10)"
 
 # webex card payload
 CARD_CONTENT = {
