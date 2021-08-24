@@ -17,9 +17,7 @@ SECRET_KEY = os.getenv('AWS_SECRET_KEY')
 ppe_requirement = ['FACE_COVER', 'HAND_COVER', 'HEAD_COVER']
 
 # Mock data from Meraki
-# snapshot_url = "https://thumbs.dreamstime.com/b/seaman-ab-bosun-deck-vessel-ship-wearing-ppe-personal-protective-equipment-helmet-coverall-lifejacket-goggles-safety-141609777.jpg"
-snapshot_url = "https://github.com/mfakbar/meraki-ppe-detection/blob/main/face_collection/mock_images/Test1.png"
-# snapshot_url = "https://faceforppedetection.s3.ap-southeast-1.amazonaws.com/muakbar.jpg"
+snapshot_url = "https://raw.githubusercontent.com/mfakbar/meraki-ppe-detection/main/face_collection/mock_images/Test3.jpg"
 mv_loc = "Warehouse / MV12"
 event_time = "19-Aug-2021 / 10:10"
 
@@ -89,7 +87,7 @@ def detect_labels(photo, bucket_name):
             missing_ppe_msg += "] "
             person_num += 1
 
-    print("Bounding box: ", bounding_box)
+    print("Person count: ", person_count)
     print("Missing ppe msg: ", missing_ppe_msg)
 
     return missing_ppe_msg, person_count, bounding_box
@@ -124,19 +122,17 @@ def search_face(photo, bucket_name, collection_name):
 
     faceMatches = response['FaceMatches']
 
-    print('Matching faces')
+    print('Matching faces:')
     for match in faceMatches:
-        print('FaceId:' + match['Face']['FaceId'])
         print('Employee alias:' + match['Face']['ExternalImageId'])
         print('Similarity: ' + "{:.2f}".format(match['Similarity']) + "%")
 
     detected_face_msg = ""
-    bounding_box = []
+    bounding_box = [response['SearchedFaceBoundingBox']]
     detected_names = []
     person_num = 1
 
     for match in faceMatches:
-        bounding_box.append(match['Face']['BoundingBox'])
         detected_names.append(match['Face']['ExternalImageId'][:-4])
 
         detected_face_msg += "[Person #" + str(person_num) + ": "
@@ -175,11 +171,6 @@ def draw_boxes(photo, bucket_name, bounding_box, key_name):
         width = imgWidth * per_ppe_box['Width']
         height = imgHeight * per_ppe_box['Height']
 
-        print('Left: ' + '{0:.0f}'.format(left))
-        print('Top: ' + '{0:.0f}'.format(top))
-        print('Width: ' + "{0:.0f}".format(width))
-        print('Height: ' + "{0:.0f}".format(height))
-
         points = (
             (left, top),
             (left + width, top),
@@ -193,7 +184,7 @@ def draw_boxes(photo, bucket_name, bounding_box, key_name):
         draw.rectangle([left, top, left + width, top + height],
                        outline='#00d400')
 
-    # image.show()
+    image.show()
 
     # Upload image with boxes
     in_mem_file = io.BytesIO()  # Save the image to an in-memory file
@@ -230,6 +221,9 @@ def main():
     if len(bounding_box_face) > 0:
         for box in bounding_box_face:
             bounding_box.append(box)
+    print("Final bounding box: ", bounding_box)
+    print
+
     # Draw bounding box
     draw_boxes(photo, bucket_name, bounding_box, key_name_box)
 
@@ -239,9 +233,10 @@ def main():
             detected_email = name+email_domain
             post_message(mv_loc, detected_email, event_time)
 
-
     # Webex notification to security team
     # post_card(mv_loc, snapshot_url, person_count,
     #           detected_face_msg, missing_ppe_msg, event_time)
+
+
 if __name__ == "__main__":
     main()

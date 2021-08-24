@@ -3,20 +3,8 @@ import io
 from PIL import Image, ImageDraw
 
 
-bounding_box = [
-    {
-        'Width': 0.17668716609477997,
-        'Height': 0.16557781398296356,
-        'Left': 0.5176424980163574,
-        'Top': 0.6662641167640686
-    },
-    {
-        'Width': 0.2005884349346161,
-        'Height': 0.1571822315454483,
-        'Left': 0.5232090353965759,
-        'Top': 0.0009936005808413029
-    }
-]
+bounding_box = [{'Width': 0.05185258388519287, 'Height': 0.1135498508810997,
+                 'Left': 0.5823403596878052, 'Top': 0.08543035387992859}]
 
 
 def draw_boxes(photo, bucket_name, bounding_box, key_name):
@@ -59,7 +47,7 @@ def draw_boxes(photo, bucket_name, bounding_box, key_name):
         draw.rectangle([left, top, left + width, top + height],
                        outline='#00d400')
 
-    # image.show()
+    image.show()
 
     # Upload image with boxes
     in_mem_file = io.BytesIO()  # Save the image to an in-memory file

@@ -174,7 +174,7 @@ def post_card(mv_loc, snapshot_url, person_count, detected_name, missing_ppe, ev
             "content": CARD_CONTENT
         }]
     )
-    print("Card posted!")
+    print("Card posted to Webex room!")
 
 
 # post webex notification to the employee
@@ -185,4 +185,4 @@ def post_message(mv_loc, detected_email, event_time):
         mv_loc + " (" + event_time +
         "). Your safety is our top priority. Please follow the PPE policy accordingly. Thanks!",
     )
-    print("Message posted!")
+    print("Message posted to employee!")
