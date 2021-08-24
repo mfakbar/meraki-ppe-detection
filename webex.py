@@ -150,7 +150,7 @@ CARD_CONTENT = {
 
 
 # post webex card as notification
-def postCard_ppeViolation(mv_loc, snapshot_url, person_count, detected_name, missing_ppe, event_time):
+def post_card(mv_loc, snapshot_url, person_count, detected_name, missing_ppe, event_time):
 
     iconUrl = "https://raw.githubusercontent.com/mfakbar/meraki-ppe-detection/main/IMAGES/warning_notification.png"
 
@@ -175,3 +175,14 @@ def postCard_ppeViolation(mv_loc, snapshot_url, person_count, detected_name, mis
         }]
     )
     print("Card posted!")
+
+
+# post webex notification to the employee
+def post_message(mv_loc, detected_email, event_time):
+    webexAPI.messages.create(
+        toPersonEmail=detected_email,
+        text="Hello there, we have detected that you're not wearing one or more PPE at " +
+        mv_loc + " (" + event_time +
+        "). Your safety is our top priority. Please follow the PPE policy accordingly. Thanks!",
+    )
+    print("Message posted!")
