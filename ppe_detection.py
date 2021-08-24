@@ -17,7 +17,8 @@ SECRET_KEY = os.getenv('AWS_SECRET_KEY')
 ppe_requirement = ['FACE_COVER', 'HAND_COVER', 'HEAD_COVER']
 
 # Mock data from Meraki
-snapshot_url = "https://thumbs.dreamstime.com/b/seaman-ab-bosun-deck-vessel-ship-wearing-ppe-personal-protective-equipment-helmet-coverall-lifejacket-goggles-safety-141609777.jpg"
+# snapshot_url = "https://thumbs.dreamstime.com/b/seaman-ab-bosun-deck-vessel-ship-wearing-ppe-personal-protective-equipment-helmet-coverall-lifejacket-goggles-safety-141609777.jpg"
+snapshot_url = "https://github.com/mfakbar/meraki-ppe-detection/blob/main/face_collection/mock_images/Test1.png"
 # snapshot_url = "https://faceforppedetection.s3.ap-southeast-1.amazonaws.com/muakbar.jpg"
 mv_loc = "Warehouse / MV12"
 event_time = "19-Aug-2021 / 10:10"
