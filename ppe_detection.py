@@ -18,6 +18,7 @@ ppe_requirement = ['FACE_COVER', 'HAND_COVER', 'HEAD_COVER']
 
 # Mock data from Meraki
 snapshot_url = "https://raw.githubusercontent.com/mfakbar/meraki-ppe-detection/main/face_collection/mock_images/Test3.jpg"
+# snapshot_url = "https://www.missiontoseafarers.org/wp-content/uploads/FAC-brochure-cover.jpg"
 mv_loc = "Warehouse / MV12"
 event_time = "19-Aug-2021 / 10:10"
 
@@ -143,6 +144,9 @@ def search_face(photo, bucket_name, collection_name):
         detected_face_msg += "] "
         person_num += 1
 
+    if len(faceMatches) == 0:
+        detected_face_msg = "Face ID not recognized"
+
     print("Detected face msg: ", detected_face_msg)
 
     return detected_face_msg, bounding_box, detected_names
@@ -184,7 +188,7 @@ def draw_boxes(photo, bucket_name, bounding_box, key_name):
         draw.rectangle([left, top, left + width, top + height],
                        outline='#00d400')
 
-    image.show()
+    # image.show()
 
     # Upload image with boxes
     in_mem_file = io.BytesIO()  # Save the image to an in-memory file
@@ -194,7 +198,12 @@ def draw_boxes(photo, bucket_name, bounding_box, key_name):
     # Upload image to s3
     s3 = boto3.client('s3')
     s3.upload_fileobj(in_mem_file, bucket_name, key_name,
-                      ExtraArgs={'ACL': 'public-read'})
+                      ExtraArgs={
+                          'ACL': 'public-read',
+                          'ContentType': 'image/jpeg',
+                          'ContentDisposition': 'inline; filename='+key_name,
+                      }
+                      )
 
     print("Image with boxes uploaded to S3")
 
@@ -202,9 +211,9 @@ def draw_boxes(photo, bucket_name, bounding_box, key_name):
 def main():
     bucket_name = "faceforppedetection"  # AWS S3 bucket name
     collection_name = "face_collection_for_PPE_detection"  # AWS collection id
+    region = "ap-southeast-1"  # AWS region
     key_name = "snapshot.jpg"  # The name of the image file we want to upload to the bucket
-    # The name of the image file w/ boxes we want to upload to the bucket
-    key_name_box = "snapshot_with_boxes.jpg"
+    key_name_box = "snapshot_with_boxes.jpeg"  # The name of the image file w/ boxes
 
     # Upload Meraki snapshot to S3
     photo = upload_to_s3(snapshot_url, bucket_name, key_name)
@@ -234,8 +243,12 @@ def main():
             post_message(mv_loc, detected_email, event_time)
 
     # Webex notification to security team
-    # post_card(mv_loc, snapshot_url, person_count,
-    #           detected_face_msg, missing_ppe_msg, event_time)
+    s3_obj_url = "https://" + bucket_name + ".s3." + \
+        region + ".amazonaws.com/" + key_name_box
+    print(s3_obj_url)
+
+    post_card(mv_loc, s3_obj_url, person_count,
+              detected_face_msg, missing_ppe_msg, event_time)
 
 
 if __name__ == "__main__":
