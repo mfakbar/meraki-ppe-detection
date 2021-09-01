@@ -17,8 +17,7 @@ SECRET_KEY = os.getenv('AWS_SECRET_KEY')
 ppe_requirement = ['FACE_COVER', 'HAND_COVER', 'HEAD_COVER']
 
 # Mock data from Meraki
-snapshot_url = "https://raw.githubusercontent.com/mfakbar/meraki-ppe-detection/main/face_collection/mock_images/Test3.jpg"
-# snapshot_url = "https://www.missiontoseafarers.org/wp-content/uploads/FAC-brochure-cover.jpg"
+snapshot_url = "https://raw.githubusercontent.com/mfakbar/meraki-ppe-detection/main/face_collection/mock_snapshots/Test3.jpg"
 mv_loc = "Warehouse / MV12"
 event_time = "19-Aug-2021 / 10:10"
 
@@ -213,7 +212,7 @@ def main():
     collection_name = "face_collection_for_PPE_detection"  # AWS collection id
     region = "ap-southeast-1"  # AWS region
     key_name = "snapshot.jpg"  # The name of the image file we want to upload to the bucket
-    key_name_box = "snapshot_with_boxes.jpeg"  # The name of the image file w/ boxes
+    key_name_box = "snapshot_with_boxes.jpg"  # The name of the image file w/ boxes
 
     # Upload Meraki snapshot to S3
     photo = upload_to_s3(snapshot_url, bucket_name, key_name)
@@ -245,10 +244,10 @@ def main():
     # Webex notification to security team
     s3_obj_url = "https://" + bucket_name + ".s3." + \
         region + ".amazonaws.com/" + key_name_box
-    print(s3_obj_url)
+    print("S3 URL: ", s3_obj_url)
 
-    post_card(mv_loc, s3_obj_url, person_count,
-              detected_face_msg, missing_ppe_msg, event_time)
+    # post_card(mv_loc, s3_obj_url, person_count,
+    #           detected_face_msg, missing_ppe_msg, event_time)
 
 
 if __name__ == "__main__":
