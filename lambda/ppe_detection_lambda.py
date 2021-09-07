@@ -1,14 +1,21 @@
 import boto3
+import json
 import requests
 from webex_lambda import *
 import io
 from PIL import Image, ImageDraw
+from pymongo import MongoClient
 
 # AWS access key and secret key
-ACCESS_KEY = ''
-SECRET_KEY = ''
+ACCESS_KEY = "AKIA5ANNF62A5DXKDUMW"
+SECRET_KEY = "/tlnYvT/E77YW47V/ILvXhA7vsM5xtHPaipmI5Lj"
 
-# Mock PPE policy from DB
+# Mongo DB database
+Database = "mongodb+srv://youraccount:xxxx@cluster0.xxxx.mongodb.net/xxxx"  # db name
+Cluster = "Tables"  # name of the sub tables
+Events_collection_name = "Events"  # collection name to store the event
+
+# What PPE policy to implement
 ppe_requirement = ['FACE_COVER', 'HAND_COVER', 'HEAD_COVER']
 
 # Employee email domain
@@ -197,11 +204,28 @@ def draw_boxes(photo, bucket_name, bounding_box, key_name):
     print("Image with boxes uploaded to S3")
 
 
+# Update Mongo DB
+def update_db(mv_loc, mv_sn, person_count, detected_face_msg, missing_ppe_msg, event_time):
+
+    # get collection
+    cluster = MongoClient(Database)
+    db = cluster[Cluster]
+    events_collection = db[Events_collection_name]
+
+    # update collection
+    events_collection.insert_one({"Time": event_time, "Camera SN": mv_sn, "Camera Location": mv_loc,
+                                 "People Count": person_count, "Names": detected_face_msg, "Missing PPEs": missing_ppe_msg})
+
+    return print("Event stored in the database")
+
+
 def lambda_handler(event, context):
     # data from Meraki
-    snapshot_url = event["snapshot_url"]
-    event_time = event["event_time"]
-    mv_loc = event["event_time"]
+    payload = json.loads(event['body'])
+    snapshot_url = payload["snapshot_url"]
+    event_time = payload["event_time"]
+    mv_loc = payload["mv_loc"]
+    mv_sn = payload["serial_number"]
 
     # AWS parameter
     bucket_name = "faceforppedetection"  # AWS S3 bucket name
@@ -243,6 +267,10 @@ def lambda_handler(event, context):
     print("S3 URL: ", s3_obj_url)
 
     post_card(mv_loc, s3_obj_url, person_count,
+              detected_face_msg, missing_ppe_msg, event_time)
+
+    # Update Mongo DB
+    update_db(mv_loc, mv_sn, person_count,
               detected_face_msg, missing_ppe_msg, event_time)
 
     return {
