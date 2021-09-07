@@ -7,8 +7,8 @@ from PIL import Image, ImageDraw
 from pymongo import MongoClient
 
 # AWS access key and secret key
-ACCESS_KEY = "AKIA5ANNF62A5DXKDUMW"
-SECRET_KEY = "/tlnYvT/E77YW47V/ILvXhA7vsM5xtHPaipmI5Lj"
+ACCESS_KEY = ""
+SECRET_KEY = ""
 
 # Mongo DB database
 Database = "mongodb+srv://youraccount:xxxx@cluster0.xxxx.mongodb.net/xxxx"  # db name
