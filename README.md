@@ -1,6 +1,6 @@
 # Meraki PPE and Facial Detection for Workplace Safety
 
-This project detects the event of PPE (personal protective equipment) policy violation, identify the person whose violating the policy, and send a notification to the person directly and also to a dedicated Webex space. The objective is to improve workplace safety and minimizing near-miss/hazardous situations that potentially caused by PPE policy violation by early automated warning. The policy violation event is stored in the database for analytics to create actionable insights to further improve workplace safety.
+This project detects the event of PPE (personal protective equipment) policy violation, identify the person whose violating the policy, and send a notification to the person directly and also to a dedicated Webex space. The objective is to improve workplace safety and minimize near-miss/hazardous situations that potentially caused by PPE policy violation. The policy violation event is stored in the database for analytics to create actionable insights to further improve the workplace safety.
 
 
 ---
