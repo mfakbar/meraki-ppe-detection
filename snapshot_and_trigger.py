@@ -15,6 +15,7 @@ MQTT_SERVER = "test.mosquitto.org"  # this is a public MQTT server for testing
 MQTT_PORT = "1883"
 MQTT_TOPIC = "/merakimv/{0}/0"
 
+# AWS API GW to trigger Lambda function
 AWS_API_URL = "AWS_API_ENDPOINT"
 
 
