@@ -1,6 +1,6 @@
 # Meraki PPE and Facial Detection for Workplace Safety
 
-This project detects the event of PPE (personal protective equipment) policy violation, identify the person whose violating the policy, and send a notification to the person directly and also to dedicated Webex space. The objective is to improve workplace safety and minimize near-miss/hazardous situations that potentially caused by PPE policy violation.
+This project detects the event of PPE (personal protective equipment) policy violation, identify the person whose violating the policy, and send a notification to the person directly and also to a dedicated Webex space. The objective is to improve workplace safety and minimize near-miss/hazardous situations that potentially caused by PPE policy violation.
 
 
 ---
@@ -56,8 +56,8 @@ Usage:
 1. Set up an AWS S3 bucket - In this case the bucket name is `faceforppedetection`
 2. Make the bucket accessible to public. In the bucket permission setting, unblock public access, allow `list` and `read` permission for public access ACL - This is for accessing the snapshot taken from Meraki. In production, it is highly recommended to use separate bucket for storing face collection (private access) and snapshot file (public read access).
 3. Upload to the bucket the face images (jpg) we want to use as reference for the recognition engine. The name of the image file is the identity of the person - In this case the file name is the employee/email alias so we can easily send the notification directly to that employee Webex account.
-4. Create collection using [create_collection.py](./face_collection/create_collection.py). Choose the name for `collection_id` -  In this case the `collection_id` name is `face_collection_for_PPE_detection` ([AWS reference](https://docs.aws.amazon.com/rekognition/latest/dg/create-collection-procedure.html))
-5. Add the face images in our S3 bucket to the collection using [add_face_to_collection.py](./face_collection/add_face_to_collection.py) ([AWS reference](https://docs.aws.amazon.com/rekognition/latest/dg/add-faces-to-collection-procedure.html))
+4. Create collection using [create_collection.py](./face_collection/create_collection.py). Choose the name for `collection_id` -  In this case the `collection_id` name is `face_collection_for_PPE_detection` ([AWS reference - Create a face collection](https://docs.aws.amazon.com/rekognition/latest/dg/create-collection-procedure.html))
+5. Add the face images in our S3 bucket to the collection using [add_face_to_collection.py](./face_collection/add_face_to_collection.py) ([AWS reference - Adding face to a collection](https://docs.aws.amazon.com/rekognition/latest/dg/add-faces-to-collection-procedure.html))
 
 ## Setting up database
 1. Create MongoDB Atlas collection - In this case the cluster name is `Tables`, and table collection name is `Events`
@@ -68,16 +68,16 @@ Usage:
 1. Change AWS, MongoDB, email domain, and Webex credentials in [ppe_detection_lambda.py](./lambda/ppe_detection_lambda.py) and [webex_lambda.py](./lambda/webex_lambda.py)
 2. Add [ppe_detection_lambda.py](./lambda/ppe_detection_lambda.py) and [webex_lambda.py](./lambda/webex_lambda.py) to the `deployment-package.zip` file ([AWS reference - Deploying lambda package using venv .zip file](https://docs.aws.amazon.com/lambda/latest/dg/python-package.html))
 3. Create a Lambda function in AWS and upload the `deployment-package.zip` file.
-4. In Lambda Runtime Setting, set the Handler to `ppe_detection_lambda.lambda_handler`
+4. In Lambda Runtime Setting, set the Handler to `ppe_detection_lambda.lambda_handler`.
 5. In Layers setting, add `arn:aws:lambda:ap-southeast-1:770693421928:layer:Klayers-python38-Pillow:12` as a new layer. This is to add the PIL library to Lambda.
-6. In Configuration setting > Triggers > Add API Gateway as a trigger ([AWS reference - Using Lambda with API GW](https://docs.aws.amazon.com/lambda/latest/dg/services-apigateway.html))
+6. In Configuration setting > Triggers > Add API Gateway as a trigger > Set up a REST or HTTP API in API Gateway ([AWS reference - Using Lambda with API GW](https://docs.aws.amazon.com/lambda/latest/dg/services-apigateway.html))
    1. After setting up the API GW, input the endpoint address to the `AWS_API_URL` variable in [snapshot_and_trigger.py](./snapshot_and_trigger.py)
 
 
 # Sample notification
 - Notification to the employee personal Webex account
   ![To personal account](./IMAGES/notification-to-person-sample.png)
-- Notification to the Webex space
+- Notification to the Webex space - Note that bounding box will be drawn on every detected PPE and face.
   - Not wearing face and head cover
   ![To space sample 3](./IMAGES/notification-to-space-sample3.png)
   - Not wearing face and head cover, and gloves is missing on the left hand
