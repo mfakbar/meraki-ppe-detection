@@ -26,7 +26,7 @@ The following diagram describes the PoV high level design.
 * Camera: Meraki MV
 * MQTT broker: Mosquitto
 * Database system: MongoDB Atlas
-* Recognition engine: AWS Lambda, Rekognition, S3
+* Recognition stack: AWS Lambda, Rekognition, S3
 * Messaging: Webex
 
 
