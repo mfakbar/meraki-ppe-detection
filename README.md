@@ -52,7 +52,7 @@ What we need:
 Usage:
 1. Input Meraki and MQTT credentials on the [snapshot_and_trigger.py](./snapshot_and_trigger.py) file. These include the MV API key, the cameras serial numbers, the MQTT server and port.
 
-## Setting up face collection
+## Setting up face collection in S3
 1. [Set up AWS CLI and SDKs](https://docs.aws.amazon.com/rekognition/latest/dg/setup-awscli-sdk.html) and save the `Access` and `Secret` key - This will be used in Lambda deployment.
 2. Set up an AWS S3 bucket - In this case the bucket name is `faceforppedetection`.
 3. Make the bucket accessible to public. In the bucket permission setting, unblock public access, allow `list` and `read` permission for public access ACL - This is for accessing the snapshot taken from Meraki. In production, it is highly recommended to use separate bucket for storing face collection (private access) and snapshot file (public read access).
@@ -60,7 +60,7 @@ Usage:
 5. Create collection using [create_collection.py](./face_collection/create_collection.py). Choose the name for `collection_id` -  In this case the `collection_id` name is `face_collection_for_PPE_detection` ([AWS reference - Create a face collection](https://docs.aws.amazon.com/rekognition/latest/dg/create-collection-procedure.html)).
 6. Add the face images in our S3 bucket to the collection using [add_face_to_collection.py](./face_collection/add_face_to_collection.py) ([AWS reference - Adding face to a collection](https://docs.aws.amazon.com/rekognition/latest/dg/add-faces-to-collection-procedure.html)).
 
-## Setting up database
+## Setting up MongoDB database
 1. Create MongoDB Atlas collection - In this case the cluster name is `Tables`, and table collection name is `Events`.
 2. Define these column in the table: Time, Camera SN, Camera Location, People Count, Names, Missing PPEs.
 3. [Create connection](https://docs.atlas.mongodb.com/tutorial/connect-to-your-cluster/) to the cluster, and save the connection string: `mongodb+srv://youraccount:xxxx@cluster0.xxxx.mongodb.net/xxxx`. This will be used to store the event to the database - See Lambda deployment.
