@@ -73,6 +73,7 @@ Usage:
 
 ## Lambda deployment
 1. Change AWS, MongoDB, email domain, and Webex credentials in [ppe_detection_lambda.py](./lambda/ppe_detection_lambda.py) and [webex_lambda.py](./lambda/webex_lambda.py).
+   1. Change the AWS region, S3 bucket name and collection name accordingly in the `lambda_handler` function.
 2. Add [ppe_detection_lambda.py](./lambda/ppe_detection_lambda.py) and [webex_lambda.py](./lambda/webex_lambda.py) to the `deployment-package.zip` file ([AWS reference - Deploying lambda package using venv .zip file](https://docs.aws.amazon.com/lambda/latest/dg/python-package.html)).
 3. Create a Lambda function in AWS and upload the `deployment-package.zip` file.
 4. In Lambda Runtime Setting, set the Handler to `ppe_detection_lambda.lambda_handler`.
