@@ -81,6 +81,8 @@ Usage:
 6. In Configuration setting > Triggers > Add API Gateway as a trigger > Set up a REST or HTTP API in API Gateway ([AWS reference - Using Lambda with API GW](https://docs.aws.amazon.com/lambda/latest/dg/services-apigateway.html)).
    1. After setting up the API GW, input the endpoint address to the `AWS_API_URL` variable in [snapshot_and_trigger.py](./snapshot_and_trigger.py).
 
+## Snapshot and trigger
+Finally, run the [snapshot_and_trigger.py](./snapshot_and_trigger.py) function, can be in a server, Raspberry Pi, etc. In this case we use our local machine. This function will instantiate MQTT subscription. In the event of detected person by Meraki MV, the function will take a snapshot, then it will send a trigger to the Lambda function in accordance with the [workflow diagram](./IMAGES/Meraki_PPE_and_Facial_Detection_LLD.jpg).
 
 # Sample notification
 - Notification to the employee personal Webex account
