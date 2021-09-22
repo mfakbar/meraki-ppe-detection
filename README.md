@@ -46,7 +46,7 @@ python -m pip install -r requirements.txt
 
 ## Setting up MQTT broker
 What we need:
-1. A MQTT broker reachable by the MV camera. The MQTT broker needs to be configured on the MV dashboard, following the steps of this [MV Sense guide](https://developer.cisco.com/meraki/mv-sense/#!mqtt/configuring-mqtt-in-the-). For our use case, we use a publicly available MQTT broker ([Mosquitto](https://test.mosquitto.org/)). Customer can deploy their own brokers for guaranteed service.
+1. A MQTT broker reachable by the MV camera. The MQTT broker needs to be configured on the MV dashboard, following the steps of this [MV Sense guide](https://developer.cisco.com/meraki/mv-sense/#!mqtt/configuring-mqtt-in-the-). For our use case, we use a publicly available MQTT broker ([Mosquitto](https://test.mosquitto.org/)). Customer can deploy their own brokers for guaranteed service. Similar setup can also be found [here](https://developer.cisco.com/codeexchange/github/repo/agmanuelian/Meraki_Facemask_Detector).
 2. Access to at least one Meraki MV camera with MV Sense license and API key. Also a list of MV serial numbers if our solution is to be deployed on multiple cameras on your environment.
    
 Usage:
