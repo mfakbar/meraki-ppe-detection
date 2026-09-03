@@ -1,98 +1,184 @@
-[![published](https://static.production.devnetcloud.com/codeexchange/assets/images/devnet-published.svg)](https://developer.cisco.com/codeexchange/github/repo/mfakbar/meraki-ppe-detection)
+[![Cisco DevNet Code Exchange](https://static.production.devnetcloud.com/codeexchange/assets/images/devnet-published.svg)](https://developer.cisco.com/codeexchange/github/repo/mfakbar/meraki-ppe-detection)
 
-# Meraki PPE and Facial Detection for Workplace Safety
+# Meraki PPE and Face Detection for Workplace Safety
 
-This project detects the event of PPE (personal protective equipment) policy violation, identify the person whose violating the policy, and send a notification to the person directly and also to a dedicated Webex space. The objective is to improve workplace safety and minimize near-miss/hazardous situations that potentially caused by PPE policy violation. The policy violation event is stored in the database to enable the customer to create actionable insights, thus to further improve the workplace safety.
+A proof of concept that turns a Meraki MV person-detection event into a PPE check, an optional face match, a Webex alert, and a searchable safety record.
 
+> This is legacy demonstration code, not a production safety system. It uses 2021-era dependencies and handles images and biometric data. Review the [limitations and privacy guidance](#prototype-limitations-and-production-guidance) before running it.
 
----
+## What this repository does
 
-The following diagram describes the use case overview.
+The project connects five stages:
 
-![Meraki PPE and Facial Detection for Workplace Safety Overview](./IMAGES/Meraki_PPE_and_Facial_Detection_Overview.jpg)
+1. A Meraki MV camera publishes person-count events through MV Sense and MQTT.
+2. `snapshot_and_trigger.py` requests a camera snapshot and sends its URL to AWS API Gateway.
+3. AWS Lambda uses Rekognition to check for face, hand, and head covers and to search a face collection.
+4. The Lambda function annotates the image and sends a Webex card to a safety space. If a face is matched, it also sends a direct reminder to that person.
+5. The event is stored in MongoDB for later review and reporting.
 
-The following diagram describes the PoV high level design.
+![High-level architecture](./IMAGES/Meraki_PPE_and_Facial_Detection_HLD.jpg)
 
-![Meraki PPE and Facial Detection for Workplace Safety High Level Design](./IMAGES/Meraki_PPE_and_Facial_Detection_HLD.jpg)
+## Why it exists
 
+Safety teams cannot watch every camera continuously. This project demonstrates how an existing camera can become an event-driven safety sensor: detect a person, inspect one image, alert the right people, and retain structured evidence for follow-up.
 
+The intended benefits are:
 
-## Contacts
-* Hung Le (hungl2@cisco.com)
-* Muhammad Akbar (muakbar@cisco.com)
-* Swati Singh (swsingh3@cisco.com)
+- faster awareness of possible PPE violations;
+- direct, contextual notifications with an annotated image;
+- a history of events by camera, location, time, person, and missing PPE;
+- a reusable integration pattern for Meraki MV, cloud vision, messaging, and analytics.
 
+## Concept and data flow
 
-
-## Solution Components
-* Camera: Meraki MV
-* MQTT broker: Mosquitto
-* Database system: MongoDB Atlas
-* Recognition stack: AWS Lambda, Rekognition, S3
-* Messaging: Webex
-
-
-
-## Workflow
-![Workflow Diagram](./IMAGES/Meraki_PPE_and_Facial_Detection_LLD.jpg)
-
-
-
-# Getting Started
-1. Clone the repository.
-2. Setup and install all the requirements - optionally, use venv to isolate the project.
+```text
+Meraki MV -> MQTT -> local subscriber -> Meraki snapshot API
+          -> API Gateway -> Lambda -> S3 + Rekognition
+          -> Webex notifications + MongoDB event record
 ```
-python -m venv myvenv
+
+The camera performs the lightweight trigger at the edge. The local subscriber requests a snapshot only when the MQTT person count is greater than zero. Cloud services perform image analysis and the notification/database systems turn that result into an operational workflow.
+
+![Detailed workflow](./IMAGES/Meraki_PPE_and_Facial_Detection_LLD.jpg)
+
+## Components
+
+| Component | Role |
+| --- | --- |
+| Meraki MV + MV Sense | Publishes person-count events and provides snapshots |
+| MQTT broker | Carries MV Sense events to the local subscriber |
+| `snapshot_and_trigger.py` | Listens for events, requests snapshots, and invokes the cloud workflow |
+| API Gateway + AWS Lambda | Receives each event and orchestrates the analysis |
+| Amazon S3 | Temporarily stores the source and annotated snapshots |
+| Amazon Rekognition | Detects PPE and searches the enrolled face collection |
+| Webex | Sends team alerts and optional direct messages |
+| MongoDB Atlas | Stores event details for review and analytics |
+
+## Reproduce the proof of concept
+
+### 1. Prerequisites
+
+You need:
+
+- a Meraki MV camera, MV Sense license, Dashboard API key, and camera serial number;
+- an MQTT broker reachable from both the camera and the machine running the subscriber;
+- an AWS account with S3, Rekognition, Lambda, and API Gateway access;
+- a MongoDB Atlas database;
+- a Webex bot and a Webex space;
+- a Python environment compatible with the pinned 2021 dependencies. Python 3.8 most closely matches the original Lambda setup.
+
+Use a test camera, test identities, and non-production cloud accounts for the first run.
+
+### 2. Clone and install
+
+```bash
+git clone https://github.com/mfakbar/meraki-ppe-detection.git
+cd meraki-ppe-detection
+python3.8 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-## Setting up MQTT broker
-What we need:
-1. A MQTT broker reachable by the MV camera. The MQTT broker needs to be configured on the MV dashboard, following the steps of this [MV Sense guide](https://developer.cisco.com/meraki/mv-sense/#!mqtt/configuring-mqtt-in-the-). For our use case, we use a publicly available MQTT broker ([Mosquitto](https://test.mosquitto.org/)). Customer can deploy their own brokers for guaranteed service. Similar setup can also be found [here](https://developer.cisco.com/codeexchange/github/repo/agmanuelian/Meraki_Facemask_Detector).
-2. Access to at least one Meraki MV camera with MV Sense license and API key. Also a list of MV serial numbers if our solution is to be deployed on multiple cameras on your environment.
-   
-Usage:
-1. Input Meraki and MQTT credentials on the [snapshot_and_trigger.py](./snapshot_and_trigger.py) file. These include the MV API key, the cameras serial numbers, the MQTT server and port.
+If the pinned packages do not install on your operating system, reproduce the project in a Python 3.8 container or update and retest the dependency set before continuing.
 
-## Setting up face collection in S3
-1. [Set up AWS CLI and SDKs](https://docs.aws.amazon.com/rekognition/latest/dg/setup-awscli-sdk.html) and save the `Access` and `Secret` key - This will be used in Lambda deployment.
-2. Set up an AWS S3 bucket - In this case the bucket name is `faceforppedetection`.
-3. Make the bucket accessible to public. In the bucket permission setting, unblock public access, allow `list` and `read` permission for public access ACL - This is for accessing the snapshot taken from Meraki. In production, it is highly recommended to use separate bucket for storing face collection (private access) and snapshot file (public read access).
-4. Upload to the bucket the face images (jpg) we want to use as reference for the recognition engine. The name of the image file is the identity of the person - In this case the file name is the employee/email alias so we can easily send the notification directly to that employee Webex account.
-5. Create collection using [create_collection.py](./face_collection/create_collection.py). Choose the name for `collection_id` -  In this case the `collection_id` name is `face_collection_for_PPE_detection` ([AWS reference - Create a face collection](https://docs.aws.amazon.com/rekognition/latest/dg/create-collection-procedure.html)).
-6. Add the face images in our S3 bucket to the collection using [add_face_to_collection.py](./face_collection/add_face_to_collection.py) ([AWS reference - Adding face to a collection](https://docs.aws.amazon.com/rekognition/latest/dg/add-faces-to-collection-procedure.html)).
+### 3. Configure AWS and the face collection
 
-## Setting up MongoDB database
-1. Create MongoDB Atlas collection - In this case the cluster name is `Tables`, and table collection name is `Events`.
-2. Define these column in the table: Time, Camera SN, Camera Location, People Count, Names, Missing PPEs.
-3. [Create connection](https://docs.atlas.mongodb.com/tutorial/connect-to-your-cluster/) to the cluster, and save the connection string: `mongodb+srv://youraccount:xxxx@cluster0.xxxx.mongodb.net/xxxx`. This will be used to store the event to the database - See Lambda deployment.
+1. Create an S3 bucket for the demonstration.
+2. Add reference JPG images. Each filename becomes the external identity used by the sample, for example `employee-alias.jpg`.
+3. Set the bucket and collection names in:
+   - `face_collection/create_collection.py`
+   - `face_collection/add_face_to_collection.py`
+   - `lambda/ppe_detection_lambda.py`
+4. Configure AWS credentials locally, then create and populate the collection:
 
-## Setting up Webex
-1. [Create Webex bot](https://developer.webex.com/docs/bots) and save the `Access Token`.
-2. Create a Webex space to send out the notification to, and add the newly created Webex bot to the space.
-3. [Get the Webex room ID](https://developer.webex.com/docs/api/v1/rooms/list-rooms) of the newly created space.
-4. Webex `Access Token` and `roomId` will be used in Lambda deployment.
+```bash
+aws configure
+python face_collection/create_collection.py
+python face_collection/add_face_to_collection.py
+```
 
-## Lambda deployment
-1. Change AWS, MongoDB, email domain, and Webex credentials in [ppe_detection_lambda.py](./lambda/ppe_detection_lambda.py) and [webex_lambda.py](./lambda/webex_lambda.py).
-   1. Change the AWS region, S3 bucket name and collection name accordingly in the `lambda_handler` function.
-2. Add [ppe_detection_lambda.py](./lambda/ppe_detection_lambda.py) and [webex_lambda.py](./lambda/webex_lambda.py) to the `deployment-package.zip` file ([AWS reference - Deploying lambda package using venv .zip file](https://docs.aws.amazon.com/lambda/latest/dg/python-package.html)).
-3. Create a Lambda function in AWS and upload the `deployment-package.zip` file.
-4. In Lambda Runtime Setting, set the Handler to `ppe_detection_lambda.lambda_handler`.
-5. In Layers setting, add `arn:aws:lambda:ap-southeast-1:770693421928:layer:Klayers-python38-Pillow:12` as a new layer. This is to add the PIL library to Lambda.
-6. In Configuration setting > Triggers > Add API Gateway as a trigger > Set up a REST or HTTP API in API Gateway ([AWS reference - Using Lambda with API GW](https://docs.aws.amazon.com/lambda/latest/dg/services-apigateway.html)).
-   1. After setting up the API GW, input the endpoint address to the `AWS_API_URL` variable in [snapshot_and_trigger.py](./snapshot_and_trigger.py).
+The sample later derives a Webex email address from the image filename. Update `email_domain` in `lambda/ppe_detection_lambda.py` to match your test users.
 
-## Snapshot and trigger
-Finally, run the [snapshot_and_trigger.py](./snapshot_and_trigger.py) function, can be in a server, Raspberry Pi, etc. In this case we use our local machine. This function will instantiate MQTT subscription. In the event of detected person by Meraki MV, the function will take a snapshot, then it will send a trigger to the Lambda function in accordance with the [workflow diagram](./IMAGES/Meraki_PPE_and_Facial_Detection_LLD.jpg).
+### 4. Configure MongoDB and Webex
 
-# Sample notification
-- Notification to the employee personal Webex account
-  ![To personal account](./IMAGES/notification-to-person-sample.png)
-- Notification to the Webex space - Note that bounding box will be drawn on every detected PPE and face.
-  - Not wearing face and head cover
-  ![To space sample 3](./IMAGES/notification-to-space-sample3.png)
-  - Not wearing face and head cover, and gloves is missing on the left hand
-  ![To space sample 2](./IMAGES/notification-to-space-sample2.png)
-  - Not wearing head cover, and the face cover is not fully covering the nose
-  ![To space sample 1](./IMAGES/notification-to-space-sample1.png)
+Create a MongoDB database and collection for events, then set these values in `lambda/ppe_detection_lambda.py`:
+
+- `Database`: MongoDB connection string;
+- `Cluster`: database name;
+- `Events_collection_name`: event collection name;
+- `ppe_requirement`: required PPE types.
+
+Create a Webex bot, add it to the destination space, and set `WEBEX_TOKEN` and `WEBEX_ROOM_ID` in `lambda/webex_lambda.py`.
+
+Do not commit real API keys, tokens, or database credentials. For anything beyond a short-lived lab, replace the hard-coded values with Lambda environment variables or a secrets manager and use an IAM execution role instead of AWS access keys in source.
+
+### 5. Deploy the Lambda function
+
+1. Build a Lambda deployment package containing `ppe_detection_lambda.py`, `webex_lambda.py`, and the required third-party libraries.
+2. Create a Lambda function with handler `ppe_detection_lambda.lambda_handler`.
+3. Grant the function the minimum S3 and Rekognition permissions it needs.
+4. Add API Gateway as an HTTP trigger.
+5. Put the resulting invoke URL in `AWS_API_URL` inside `snapshot_and_trigger.py`.
+
+The included `lambda/deployment-package.zip` is a historical artifact. Rebuild the package for your selected Lambda runtime instead of assuming that archive is current.
+
+### 6. Configure Meraki MV and MQTT
+
+1. Enable MV Sense on the camera.
+2. Configure the camera to publish to your MQTT broker.
+3. In `snapshot_and_trigger.py`, set:
+   - `MV_API_KEY`;
+   - `MV_CAMERA_SN`;
+   - `MQTT_SERVER` and an integer `MQTT_PORT`;
+   - `AWS_API_URL`.
+4. Use a private, authenticated, TLS-enabled MQTT broker for any environment beyond a disposable lab.
+
+### 7. Run and verify
+
+```bash
+python snapshot_and_trigger.py
+```
+
+Walk into the camera's field of view and verify the pipeline stage by stage:
+
+1. the subscriber receives `/merakimv/<serial>/0` with a person count above zero;
+2. the Meraki Snapshot API returns an accessible image URL;
+3. API Gateway invokes the Lambda function;
+4. Rekognition returns PPE and face-search results;
+5. Webex receives an alert with the annotated snapshot;
+6. MongoDB contains a new event document.
+
+## Expected outcome
+
+The safety space receives a card containing the camera location, people count, detected identity when available, missing PPE, timestamp, and annotated image. A matched employee receives a direct reminder, and MongoDB retains the event for analysis.
+
+![Sample Webex alert](./IMAGES/notification-to-space-sample1.png)
+
+## Prototype limitations and production guidance
+
+- The current Lambda path continues to notify and store an event even when no PPE violation is reported. Add and test an explicit violation gate before operational use.
+- `SearchFacesByImage` searches using the largest face in the image; this sample should not be treated as reliable multi-person identification.
+- The current snapshot helper needs correction before an end-to-end run: it does not format the camera serial into the snapshot endpoint correctly and later treats the returned URL string as a response object.
+- The sample reuses fixed S3 object names, which can overwrite concurrent events.
+- The original design makes an annotated image publicly readable for Webex rendering. Use controlled delivery, short retention, encryption, and least-privilege access instead.
+- PPE and face results are probabilistic. Require human review before taking action that affects a person.
+- Obtain the required consent and complete privacy, biometric-data, retention, and workplace-policy reviews for your jurisdiction.
+
+## References
+
+- [Cisco Meraki MV Sense and MQTT](https://developer.cisco.com/meraki/build/mv-sense-documentation/)
+- [Cisco Meraki Snapshot API](https://developer.cisco.com/meraki/mv-sense/rest-api/)
+- [Amazon Rekognition PPE detection](https://docs.aws.amazon.com/rekognition/latest/dg/ppe-detection.html)
+- [Amazon Rekognition face collections](https://docs.aws.amazon.com/rekognition/latest/dg/collections.html)
+- [Webex bots](https://developer.webex.com/create/docs/bots)
+
+## Contacts
+
+- Hung Le — hungl2@cisco.com
+- Muhammad Akbar — muakbar@cisco.com
+- Swati Singh — swsingh3@cisco.com
+
+## License
+
+This project is available under the [MIT License](./LICENSE).
